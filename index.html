@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="声劇の準備を進行する Discord bot「進行bot」をサーバーに追加するページ">
+<title>進行bot の招待</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+  /* 台本の用紙: 罫線の入った紙の上に、配役表のような段組み。目立たせるのは招待ボタン1つだけ */
+  :root {
+    --paper: #f6f4ef;
+    --sheet: #fffdf8;
+    --ink: #22242b;
+    --muted: #63666f;
+    --rule: #e1ddd2;
+    --accent: #2f3fae;
+    --accent-ink: #ffffff;
+    --mark: #b4422f;
+    --display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16171b; --sheet: #1e2026; --ink: #ecebe6; --muted: #a3a49f;
+      --rule: #32343c; --accent: #8e9bff; --accent-ink: #14162a; --mark: #e7826d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #16171b; --sheet: #1e2026; --ink: #ecebe6; --muted: #a3a49f;
+    --rule: #32343c; --accent: #8e9bff; --accent-ink: #14162a; --mark: #e7826d;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.8;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 56px;
+  }
+  .sheet {
+    max-width: 680px;
+    margin: 0 auto;
+    background: var(--sheet);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: clamp(24px, 5vw, 48px);
+    display: grid;
+    gap: 36px;
+  }
+  header { display: grid; gap: 14px; }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--mark);
+    font-weight: 700;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(30px, 7vw, 42px);
+    line-height: 1.3;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lead { margin: 0; color: var(--muted); max-width: 34em; }
+
+  .cta { display: grid; gap: 12px; justify-items: start; }
+  .invite {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 14px 26px;
+    border-radius: 999px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .invite:hover { transform: translateY(-1px); box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .invite:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-offset: 3px; }
+  .invite svg { width: 18px; height: 18px; flex: none; }
+  .note { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .copy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+  }
+  .copy code {
+    flex: 1 1 260px;
+    min-width: 0;
+    font-size: 12px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 8px 10px;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+  .copy button {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .copy button:hover { border-color: var(--muted); }
+
+  section { display: grid; gap: 14px; }
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 20px;
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* 進行の順番は実際の段階の順なので番号を付ける */
+  ol.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: step; }
+  ol.flow li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 2.4em 6.5em 1fr;
+    gap: 4px 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--rule);
+    align-items: baseline;
+  }
+  ol.flow li:last-child { border-bottom: 0; }
+  ol.flow li::before {
+    content: counter(step);
+    font-family: var(--display);
+    font-weight: 800;
+    color: var(--mark);
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  ol.flow b { font-weight: 700; }
+  ol.flow span { color: var(--muted); min-width: 0; }
+  @media (max-width: 480px) {
+    ol.flow li { grid-template-columns: 2em 1fr; }
+    ol.flow span { grid-column: 2; }
+  }
+
+  ul.perms { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  ul.perms li { display: grid; grid-template-columns: 13em 1fr; gap: 12px; }
+  ul.perms .en { font-size: 13px; font-variant-east-asian: normal; }
+  ul.perms .why { color: var(--muted); min-width: 0; }
+  @media (max-width: 480px) { ul.perms li { grid-template-columns: 1fr; gap: 0; } }
+
+  .cmds { display: grid; gap: 8px; }
+  .cmd { display: grid; grid-template-columns: 9em 1fr; gap: 12px; align-items: baseline; }
+  .cmd code {
+    font-size: 13px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 2px 8px;
+    justify-self: start;
+  }
+  .cmd span { color: var(--muted); min-width: 0; }
+  @media (max-width: 480px) { .cmd { grid-template-columns: 1fr; gap: 2px; } }
+
+  footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 16px; }
+  footer p { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .invite { transition: none; } }
+</style>
+</head>
+<body>
+
+<main class="sheet">
+  <header>
+    <div class="eyebrow">DISCORD BOT ・ 声劇の進行役</div>
+    <h1>進行bot をサーバーに招待する</h1>
+    <p class="lead">声劇を始める前の準備（参加者集め、NG と上演時間の共有、台本の持ち寄りと投票、配役）を、チャンネルの中で順番に進めてくれる bot です。</p>
+  </header>
+
+  <div class="cta">
+    <a class="invite" id="invite-link" href="https://discord.com/oauth2/authorize?client_id=1569860684794040454&amp;scope=bot+applications.commands&amp;permissions=274877991936" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+      サーバーに追加する
+    </a>
+    <p class="note">Discord が開くので、追加先のサーバーを選んで「認証」を押します。追加するには、そのサーバーの「サーバー管理」の権限が必要です。</p>
+    <div class="copy">
+      <code id="invite-url">https://discord.com/oauth2/authorize?client_id=1569860684794040454&amp;scope=bot+applications.commands&amp;permissions=274877991936</code>
+      <button type="button" id="copy-btn">リンクをコピー</button>
+    </div>
+  </div>
+
+  <section aria-labelledby="flow-h">
+    <h2 id="flow-h">進行の流れ</h2>
+    <ol class="flow">
+      <li><b>参加者の募集</b><span>ボタンで参加・取り消し。主催者が締め切ります</span></li>
+      <li><b>条件の設定</b><span>参加者それぞれが NG と上演時間の上限を設定。上限は一番短い時間を使います</span></li>
+      <li><b>台本の提出</b><span>チャンネルに台本の URL を貼るだけ。台本名はページから自動で読み取ります</span></li>
+      <li><b>投票</b><span>本数と人数に合わせて1人1〜3票。全員の投票で決まります</span></li>
+      <li><b>役の入力</b><span>主催者が役を入力。声劇台本置き場の登場人物欄はそのまま貼れます</span></li>
+      <li><b>希望役と配役</b><span>重なった役は抽選。外れた人は残りの役から選び直せます</span></li>
+      <li><b>まとめ</b><span>台本名、URL、役表を投稿して終わります</span></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="perm-h">
+    <h2 id="perm-h">追加するときに求められる権限</h2>
+    <ul class="perms">
+      <li><span class="en">View Channels</span><span class="why">進行するチャンネルを見る</span></li>
+      <li><span class="en">Send Messages</span><span class="why">案内やまとめを投稿する</span></li>
+      <li><span class="en">Send Messages in Threads</span><span class="why">スレッドの中でも進行する</span></li>
+      <li><span class="en">Embed Links</span><span class="why">案内を見やすい枠で表示する</span></li>
+      <li><span class="en">Read Message History</span><span class="why">貼られた台本の URL を読む</span></li>
+    </ul>
+    <p class="note">管理者権限やメンバーの管理などの強い権限は求めません。</p>
+  </section>
+
+  <section aria-labelledby="use-h">
+    <h2 id="use-h">追加したら</h2>
+    <div class="cmds">
+      <div class="cmd"><code>/声劇 開始</code><span>そのチャンネルで進行を始めます。始めた人が主催者になります</span></div>
+      <div class="cmd"><code>/声劇 状況</code><span>今どの段階かを確かめます</span></div>
+      <div class="cmd"><code>/声劇 中止</code><span>主催者かサーバー管理者が進行を止めます</span></div>
+    </div>
+    <p class="note">追加した直後は <code>/声劇</code> が候補に出るまで少し時間がかかることがあります（最大1時間ほど）。</p>
+  </section>
+
+  <footer>
+    <p>チャンネルごとに1つずつ進行できます。複数のチャンネルやサーバーで同時に使っても混ざりません。</p>
+  </footer>
+</main>
+
+<script>
+  (function () {
+    var btn = document.getElementById("copy-btn");
+    var code = document.getElementById("invite-url");
+    btn.addEventListener("click", function () {
+      var text = code.textContent;
+      var done = function () {
+        btn.textContent = "コピーしました";
+        setTimeout(function () { btn.textContent = "リンクをコピー"; }, 2000);
+      };
+      var fallback = function () {
+        var range = document.createRange();
+        range.selectNodeContents(code);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        btn.textContent = "選択しました。コピーしてください";
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else {
+        fallback();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
